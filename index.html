@@ -47,8 +47,65 @@ footer{border-top:1px solid #ffffff0c;min-height:75px;padding:20px max(28px,calc
 </main>
 <footer><a class="brand footer-brand" href="#">Clip<span>Nest</span></a><span>Made for the videos you’re allowed to keep.</span><a href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noreferrer">About supported sources ↗</a></footer>
 <script>
-const form=document.getElementById('form'), url=document.getElementById('url'), job=document.getElementById('job');
-document.getElementById('paste').addEventListener('click',async()=>{try{url.value=await navigator.clipboard.readText();url.focus()}catch(e){url.focus();url.placeholder='Paste with Ctrl + V'}});
-form.addEventListener('submit',e=>{e.preventDefault();job.classList.remove('hidden');document.getElementById('jobicon').textContent='!';document.getElementById('jobtitle').textContent='Backend required';document.getElementById('jobmessage').textContent='This HTML-only version cannot process platform video links by itself. Deploy the ClipNest backend to enable real downloads. For a direct .mp4 or other media file URL, try opening the link in your browser.';document.getElementById('bar').style.width='0%';document.getElementById('label').textContent='Not started';document.getElementById('pct').textContent='—';document.getElementById('save').classList.add('hidden')});
+// After deploying the backend, paste its public HTTPS base URL here.
+// Example: https://clipnest-downloader.onrender.com
+const API_BASE = "https://YOUR-CLIPNEST-BACKEND.onrender.com";
+const form=document.getElementById('form'), urlInput=document.getElementById('url'), job=document.getElementById('job');
+const quality=document.getElementById('quality'), button=form.querySelector('.download-btn');
+const title=document.getElementById('jobtitle'), message=document.getElementById('jobmessage');
+const bar=document.getElementById('bar'), label=document.getElementById('label'), pctLabel=document.getElementById('pct');
+const save=document.getElementById('save'), icon=document.getElementById('jobicon');
+let pollTimer=null;
+function setStatus(heading, detail, percent=0, status='Working') {
+  job.classList.remove('hidden'); title.textContent=heading; message.textContent=detail;
+  bar.style.width=percent+'%'; label.textContent=status; pctLabel.textContent=percent+'%';
+  save.classList.add('hidden'); icon.textContent='↓'; icon.style.color='';
+}
+function showError(detail) {
+  setStatus('Could not start download', detail, 0, 'Needs attention');
+  icon.textContent='!'; icon.style.color='#ff9b9b';
+}
+document.getElementById('paste').addEventListener('click',async()=>{
+  try { urlInput.value=await navigator.clipboard.readText(); urlInput.focus(); }
+  catch { urlInput.focus(); urlInput.placeholder='Paste with Ctrl + V'; }
+});
+form.addEventListener('submit',async e=>{
+  e.preventDefault(); if(pollTimer) clearTimeout(pollTimer);
+  if(!API_BASE.startsWith('https://') || API_BASE.includes('YOUR-CLIPNEST')) {
+    showError('The backend URL has not been configured yet. Deploy the backend and replace API_BASE near the bottom of index.html with its HTTPS URL.'); return;
+  }
+  button.disabled=true; button.textContent='Starting…';
+  setStatus('Preparing your download…','Connecting to the download service',2,'Starting');
+  try {
+    const response=await fetch(API_BASE+'/api/download',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:urlInput.value.trim(),quality:quality.value})});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(data.error||'Unable to start this download.');
+    poll(data.id);
+  } catch(err) {
+    showError((err.message||'Network error. Please try again.')+' Check that the backend is deployed and its FRONTEND_ORIGIN setting matches your GitHub Pages origin.');
+    button.disabled=false; button.textContent='Download video ↓';
+  }
+});
+async function poll(id) {
+  try {
+    const response=await fetch(API_BASE+'/api/status/'+encodeURIComponent(id));
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(data.error||'Could not check download progress.');
+    const progress=Math.max(0,Math.min(100,Number(data.progress)||0));
+    bar.style.width=progress+'%'; pctLabel.textContent=progress+'%';
+    if(data.status==='complete') {
+      title.textContent=data.title||'Your file is ready'; message.textContent='Your download is ready to save to your device.';
+      label.textContent='Complete'; save.href=API_BASE+data.download_url; save.classList.remove('hidden');
+      icon.textContent='✓'; icon.style.color='#6bd8a2'; button.disabled=false; button.textContent='Download another ↓'; return;
+    }
+    if(data.status==='error') throw new Error(data.error||'The source could not be downloaded.');
+    const labels={queued:'Queued',starting:'Connecting',downloading:'Downloading',processing:'Processing file'};
+    title.textContent=data.title||({queued:'Your download is queued',starting:'Connecting to the source',downloading:'Downloading your video',processing:'Finishing your file'}[data.status]||'Working on your download…');
+    message.textContent=data.status==='downloading'?[data.speed?'Speed: '+data.speed:'',data.eta?'ETA: '+data.eta:''].filter(Boolean).join(' · ')||'Receiving video data':data.status==='processing'?'Preparing the video or audio file':'This can take a little while depending on the source.';
+    label.textContent=labels[data.status]||'Working'; pollTimer=setTimeout(()=>poll(id),1500);
+  } catch(err) {
+    showError(err.message||'Something went wrong while checking progress.'); button.disabled=false; button.textContent='Try again ↓';
+  }
+}
 </script>
 </body></html>

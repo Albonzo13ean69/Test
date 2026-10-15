@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: clipnest-downloader
+    runtime: docker
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: MAX_ACTIVE_DOWNLOADS
+        value: "2"
+      - key: FILE_TTL_SECONDS
+        value: "3600"
