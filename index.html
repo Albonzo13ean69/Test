@@ -27,85 +27,78 @@ footer{border-top:1px solid #ffffff0c;min-height:75px;padding:20px max(28px,calc
 <div class="top-label"><span class="status-dot"></span> SIMPLE. FAST. PRIVATE.</div>
 </header>
 <main>
-<section class="hero"><div class="eyebrow">✦ &nbsp; YOUR VIDEO, YOUR DEVICE</div><h1>Keep the videos<br>you <span class="gradient-text">love.</span></h1><p class="subhead">Paste a public video link, choose a format, and save it to your device. No clutter, just your download.</p></section>
+<section class="hero"><div class="eyebrow">✦ &nbsp; YOUR VIDEO, YOUR DEVICE</div><h1>Keep the videos<br>you <span class="gradient-text">love.</span></h1><p class="subhead">Paste a direct video or media-file link and save it to your device. No clutter, just your download.</p></section>
 <section class="card">
 <div class="card-top"><div><span class="step">01</span><span class="card-heading">Add a video link</span></div><span class="secure">♧ Link stays private</span></div>
 <form id="form">
 <label class="sr" for="url">Video URL</label><div class="url-wrap"><span class="link-icon">↗</span><input id="url" type="url" placeholder="Paste a video URL here…" autocomplete="url" required maxlength="4096"><button class="paste-btn" id="paste" type="button">Paste</button></div>
-<div class="options"><div class="quality"><label for="quality">DOWNLOAD QUALITY</label><div class="select-wrap"><select id="quality"><option value="best">Best available</option><option value="1080">1080p · Full HD</option><option value="720">720p · HD</option><option value="480">480p</option><option value="360">360p</option><option value="audio">Audio only · MP3</option></select></div></div><button class="download-btn" type="submit">Download video &nbsp; ↓</button></div>
+<div class="options"><div class="quality"><label for="quality">SUPPORTED LINK TYPE</label><div class="select-wrap"><select id="quality"><option value="direct">Direct media file URL</option></select></div></div><button class="download-btn" type="submit">Download file &nbsp; ↓</button></div>
 </form>
-<div class="supported"><span class="check">✓</span> Public videos from supported sources <span>·</span> No account needed</div>
-<p class="smallprint">This standalone HTML page is the interface only. To download videos from sites such as YouTube or TikTok, it needs a compatible backend service; a browser-only HTML file cannot reliably fetch and convert those platforms' videos. Direct video file links may open or download according to the host's settings.</p>
+<div class="supported"><span class="check">✓</span> Direct media-file links <span>·</span> No account needed</div>
+<p class="smallprint">ClipNest runs without a server backend. Paste a direct URL to a media file (for example, an MP4 file). YouTube, TikTok, and Instagram page links are not supported in this browser-only version. Some file hosts block browser downloads; if that happens, ClipNest will open the source link instead.</p>
 </section>
 <section id="job" class="job hidden" aria-live="polite"><div class="job-icon" id="jobicon">↓</div><div class="job-content"><div class="job-title" id="jobtitle">Ready</div><div class="job-message" id="jobmessage"></div><div class="progress"><div id="bar"></div></div><div class="meta"><span id="label">Waiting</span><span id="pct">0%</span></div><a id="save" class="save hidden" href="#">Save file to device ↓</a></div></section>
 <section class="how"><div class="section-kicker">MADE TO BE SIMPLE</div><h2>Three steps. That's it.</h2><div class="steps">
-<article class="step-card"><div class="step-visual purple">↗</div><div class="step-num">STEP 01</div><h3>Copy a link</h3><p>Copy the public URL of a video you have permission to save.</p></article>
-<article class="step-card"><div class="step-visual blue">≋</div><div class="step-num">STEP 02</div><h3>Pick your quality</h3><p>Choose a resolution or extract an audio track when available.</p></article>
-<article class="step-card"><div class="step-visual green">↓</div><div class="step-num">STEP 03</div><h3>Save it</h3><p>When a compatible download is ready, save the file to your device.</p></article>
+<article class="step-card"><div class="step-visual purple">↗</div><div class="step-num">STEP 01</div><h3>Copy a link</h3><p>Copy the direct URL of a media file you have permission to save.</p></article>
+<article class="step-card"><div class="step-visual blue">≋</div><div class="step-num">STEP 02</div><h3>Pick your quality</h3><p>Use a direct media-file URL, such as an MP4 link.</p></article>
+<article class="step-card"><div class="step-visual green">↓</div><div class="step-num">STEP 03</div><h3>Save it</h3><p>Save the file directly, or open the source if the host blocks browser downloads.</p></article>
 </div></section>
 <section class="notice"><span class="notice-icon">ⓘ</span><p><strong>Use it responsibly.</strong> Only download content you own or are authorized to save. Some sites block downloads or prohibit them in their terms. DRM-protected, private, or access-restricted content is not supported.</p></section>
 </main>
-<footer><a class="brand footer-brand" href="#">Clip<span>Nest</span></a><span>Made for the videos you’re allowed to keep.</span><a href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noreferrer">About supported sources ↗</a></footer>
+<footer><a class="brand footer-brand" href="#">Clip<span>Nest</span></a><span>Made for the videos you’re allowed to keep.</span><a href="https://pages.github.com/" target="_blank" rel="noreferrer">Hosted with GitHub Pages ↗</a></footer>
 <script>
-// After deploying the backend, paste its public HTTPS base URL here.
-// Example: https://clipnest-downloader.onrender.com
-const API_BASE = "https://YOUR-CLIPNEST-BACKEND.onrender.com";
 const form=document.getElementById('form'), urlInput=document.getElementById('url'), job=document.getElementById('job');
-const quality=document.getElementById('quality'), button=form.querySelector('.download-btn');
+const button=form.querySelector('.download-btn');
 const title=document.getElementById('jobtitle'), message=document.getElementById('jobmessage');
 const bar=document.getElementById('bar'), label=document.getElementById('label'), pctLabel=document.getElementById('pct');
 const save=document.getElementById('save'), icon=document.getElementById('jobicon');
-let pollTimer=null;
-function setStatus(heading, detail, percent=0, status='Working') {
+function setStatus(heading, detail, percent=0, status='Ready') {
   job.classList.remove('hidden'); title.textContent=heading; message.textContent=detail;
   bar.style.width=percent+'%'; label.textContent=status; pctLabel.textContent=percent+'%';
   save.classList.add('hidden'); icon.textContent='↓'; icon.style.color='';
 }
 function showError(detail) {
-  setStatus('Could not start download', detail, 0, 'Needs attention');
+  setStatus('Could not download this link', detail, 0, 'Needs attention');
   icon.textContent='!'; icon.style.color='#ff9b9b';
 }
 document.getElementById('paste').addEventListener('click',async()=>{
   try { urlInput.value=await navigator.clipboard.readText(); urlInput.focus(); }
   catch { urlInput.focus(); urlInput.placeholder='Paste with Ctrl + V'; }
 });
-form.addEventListener('submit',async e=>{
-  e.preventDefault(); if(pollTimer) clearTimeout(pollTimer);
-  if(!API_BASE.startsWith('https://') || API_BASE.includes('YOUR-CLIPNEST')) {
-    showError('The backend URL has not been configured yet. Deploy the backend and replace API_BASE near the bottom of index.html with its HTTPS URL.'); return;
+form.addEventListener('submit', async e=>{
+  e.preventDefault();
+  let parsed;
+  try { parsed = new URL(urlInput.value.trim()); }
+  catch { showError('Enter a valid direct media-file URL.'); return; }
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    showError('Only HTTP and HTTPS links are supported.'); return;
   }
-  button.disabled=true; button.textContent='Starting…';
-  setStatus('Preparing your download…','Connecting to the download service',2,'Starting');
+  if (/youtube\.com|youtu\.be|tiktok\.com|instagram\.com/i.test(parsed.hostname)) {
+    showError('This no-backend version supports direct media-file URLs only, not YouTube, TikTok, or Instagram page links.'); return;
+  }
+  button.disabled=true; button.textContent='Preparing…';
+  setStatus('Checking your link…','Trying to download the media file directly from its source.',10,'Connecting');
   try {
-    const response=await fetch(API_BASE+'/api/download',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:urlInput.value.trim(),quality:quality.value})});
-    const data=await response.json().catch(()=>({}));
-    if(!response.ok) throw new Error(data.error||'Unable to start this download.');
-    poll(data.id);
-  } catch(err) {
-    showError((err.message||'Network error. Please try again.')+' Check that the backend is deployed and its FRONTEND_ORIGIN setting matches your GitHub Pages origin.');
-    button.disabled=false; button.textContent='Download video ↓';
+    const response=await fetch(parsed.href, {mode:'cors'});
+    if (!response.ok) throw new Error('The file host returned HTTP '+response.status+'.');
+    const blob=await response.blob();
+    if (!blob.size) throw new Error('The source returned an empty file.');
+    const objectUrl=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const lastPart=parsed.pathname.split('/').filter(Boolean).pop() || 'clipnest-download';
+    a.href=objectUrl; a.download=decodeURIComponent(lastPart.split('?')[0]) || 'clipnest-download';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(objectUrl), 60000);
+    setStatus('Your file download has started','Your browser should save the media file. Check your downloads folder.',100,'Started');
+    icon.textContent='✓'; icon.style.color='#6bd8a2';
+  } catch (err) {
+    setStatus('Opening the source link','This host does not allow a browser-side download (often due to CORS). The source will open in a new tab; use its own download option if available.',0,'Source link');
+    icon.textContent='↗';
+    const opened=window.open(parsed.href, '_blank', 'noopener,noreferrer');
+    if (!opened) message.textContent += ' Your browser blocked the new tab; open this link manually: '+parsed.href;
+  } finally {
+    button.disabled=false; button.textContent='Download file ↓';
   }
 });
-async function poll(id) {
-  try {
-    const response=await fetch(API_BASE+'/api/status/'+encodeURIComponent(id));
-    const data=await response.json().catch(()=>({}));
-    if(!response.ok) throw new Error(data.error||'Could not check download progress.');
-    const progress=Math.max(0,Math.min(100,Number(data.progress)||0));
-    bar.style.width=progress+'%'; pctLabel.textContent=progress+'%';
-    if(data.status==='complete') {
-      title.textContent=data.title||'Your file is ready'; message.textContent='Your download is ready to save to your device.';
-      label.textContent='Complete'; save.href=API_BASE+data.download_url; save.classList.remove('hidden');
-      icon.textContent='✓'; icon.style.color='#6bd8a2'; button.disabled=false; button.textContent='Download another ↓'; return;
-    }
-    if(data.status==='error') throw new Error(data.error||'The source could not be downloaded.');
-    const labels={queued:'Queued',starting:'Connecting',downloading:'Downloading',processing:'Processing file'};
-    title.textContent=data.title||({queued:'Your download is queued',starting:'Connecting to the source',downloading:'Downloading your video',processing:'Finishing your file'}[data.status]||'Working on your download…');
-    message.textContent=data.status==='downloading'?[data.speed?'Speed: '+data.speed:'',data.eta?'ETA: '+data.eta:''].filter(Boolean).join(' · ')||'Receiving video data':data.status==='processing'?'Preparing the video or audio file':'This can take a little while depending on the source.';
-    label.textContent=labels[data.status]||'Working'; pollTimer=setTimeout(()=>poll(id),1500);
-  } catch(err) {
-    showError(err.message||'Something went wrong while checking progress.'); button.disabled=false; button.textContent='Try again ↓';
-  }
-}
 </script>
 </body></html>
